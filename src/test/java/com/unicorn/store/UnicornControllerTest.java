@@ -49,6 +49,14 @@ class UnicornControllerTest {
         assertEquals(unicorn.getType(), received.getType());
         assertEquals(unicorn.getSize(), received.getSize());
         handler.close();
+
+        AwsProxyRequest deleteRequest = delete(path);
+        AwsProxyResponse deleteResponse = handler.handleRequest(deleteRequest, lambdaContext);
+        assertEquals(200, deleteResponse.getStatusCode());
+
+        getResponse = handler.handleRequest(getRequest, lambdaContext);
+        assertEquals(404, getResponse.getStatusCode());
+        assertTrue(getResponse.getBody().contains("Unicorn not found"));
     }
 
     AwsProxyRequest create(Unicorn unicorn, ObjectMapper objectMapper) throws JsonProcessingException {
@@ -69,6 +77,16 @@ class UnicornControllerTest {
         proxyRequest.setHeaders(headers);
         proxyRequest.setPath(path);
         proxyRequest.setHttpMethod(HttpMethod.GET.toString());
+        return proxyRequest;
+    }
+
+    AwsProxyRequest delete(String path) {
+        AwsProxyRequest proxyRequest = new AwsProxyRequest();
+        proxyRequest.setPath(path);
+        SingleValueHeaders headers = new SingleValueHeaders();
+        headers.put(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
+        proxyRequest.setHeaders(headers);
+        proxyRequest.setHttpMethod(HttpMethod.DELETE.toString());
         return proxyRequest;
     }
 
